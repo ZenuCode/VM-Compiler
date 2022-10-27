@@ -15,12 +15,13 @@ private:
 public:
     Statements();
     Statements(std::string _string);
-    static void processStmt(std::string val);
+    static void processStmt(std::string val, std::string arr[]);
 
-    static void start();
-    static void end();
-    static void exit();
-    static void declscal(std::string val);
+    static void declscal(std::string arr[], std::string var, int loc, int length);
+    static void declarr(std::string arr[], std::string var, int loc, int length);
+    static void start(std::string arr[]);
+    static void end(std::string arr[]);
+    static void exit(std::string arr[]);
     /*
     void declarr(std::string, int);
     void label(std::string);
