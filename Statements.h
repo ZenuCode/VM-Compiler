@@ -1,53 +1,45 @@
-//
-// Created by Jaehyeok Lee on 10/25/2022.
-//
 
 #ifndef STEP1_STATEMENTS_H
 #define STEP1_STATEMENTS_H
 
 #include <string>
+#include "SymbolTable.h"
+#include "StatementBuffer.h"
 
 class Statements {
 private:
-    std::string var_St;
-    int length_St;
-    std::string label_St;
+    std::string key;
+    std::string length;
 public:
     Statements();
-    Statements(std::string _string);
-    static void processStmt(std::string val, std::string arr[]);
+    void processStmt(std::string, StatementBuffer *Instructions, SymbolTable *Symbols);
+    void processPrint(StatementBuffer Instructions,  SymbolTable Symbols);
 
-    static void declscal(std::string arr[], std::string var, int loc, int length);
-    static void declarr(std::string arr[], std::string var, int loc, int length);
-    static void start(std::string arr[]);
-    static void end(std::string arr[]);
-    static void exit(std::string arr[]);
-    /*
-    void declarr(std::string, int);
-    void label(std::string);
-    void gosublabel(std::string);
-    void start();
-    void end();
-    void exit();
-    void jump(std::string);
-    void jumpzero(std::string);
-    void jumpnzero(std::string);
-    void gosub(std::string);
-    void return();
-    void pushscal(std::string);
-    void pusharr(std::string);
-    void pushi(int);
-    void pop();
-    void popscal(std::string);
-    void poparr(std::string);
-    void dup();
-    void swap();
-    void add();
-    void negate();
-    void mul();
-    void div();
-    void printtos();
-    void prints();
-     */
+    void declscal(SymbolTable *, std::string);
+    void declarr(SymbolTable *, std::string, std::string);
+    void label(SymbolTable *, std::string, int);
+    void gosublabel(StatementBuffer *, SymbolTable *Symbols, std::string, int);
+    void start(StatementBuffer *);
+    void end(StatementBuffer *);
+    void exit(StatementBuffer *);
+    void jump(StatementBuffer *);
+    void jumpzero(StatementBuffer *, std::string);
+    void jumpnzero(StatementBuffer *, std::string);
+    void gosub(StatementBuffer *, SymbolTable*, std::string, int);
+    void returnF(StatementBuffer *);
+    void pushscal(StatementBuffer *, std::string);
+    void pusharr(StatementBuffer *, std::string);
+    void pushi(StatementBuffer *, std::string);
+    void pop(StatementBuffer *);
+    void popscal(StatementBuffer *, std::string);
+    void poparr(StatementBuffer *, std::string);
+    void dup(StatementBuffer *);
+    void swapF(StatementBuffer *);
+    void add(StatementBuffer *);
+    void negate(StatementBuffer *);
+    void mul(StatementBuffer *);
+    void div(StatementBuffer *);
+    void printtos(StatementBuffer *);
+    void prints(StatementBuffer *, SymbolTable *, std::string);
 };
 #endif //STEP1_STATEMENTS_H

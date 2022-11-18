@@ -6,17 +6,11 @@
 #include <string>
 #include "SymbolTable.h"
 
-SymbolTable::SymbolTable( ) {
-    index = 0;
+SymbolTable::SymbolTable( ) {}
+
+void SymbolTable::input(SymbolTable *orig, std::string name, int idx, int length) {
+    orig->Symbols[name] = std::make_pair(orig->index + idx, length);
+    orig->index = orig->index + idx + 1;
 }
 
-SymbolTable::SymbolTable(std::string _name, int _location, int _length) {
-    name = _name;
-    location = _location;
-    length = _length;
-}
-
-void SymbolTable::addMap(std::string var) {
-    totalMap.insert(std::make_pair(var, std::make_pair(idx, 1)));
-}
 

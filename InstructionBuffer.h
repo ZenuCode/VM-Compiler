@@ -1,21 +1,22 @@
-//
-// Created by Jaehyeok Lee on 10/25/2022.
-//
-#ifndef STEP1_INSTRUCTIONBUFFER_H
-#define STEP1_INSTRUCTIONBUFFER_H
+#ifndef STEP1_STATEMENTBUFFER_H
+#define STEP1_STATEMENTBUFFER_H
 
 #include <string>
 #include <map>
 #include <iostream>
+#include <vector>
 
-class InstructionBuffer {
+class StatementBuffer {
 public:
-    std::string op;
-    int num;
     int count = 0;
+    std::map<int, std::pair<std::string , int>> Instructions;
 
-    InstructionBuffer();
-    InstructionBuffer(std::string _op, int _num);
+    void oneInput(StatementBuffer *Instructions);
+    void twoInput(StatementBuffer *Instructions, std::string _op);
+    void threeInput(StatementBuffer *Instructions, std::string, int);
+
+private:
+    std::string _op;
 };
 
-#endif //STEP1_INSTRUCTIONBUFFER_H
+#endif //STEP1_STATEMENTBUFFER_H

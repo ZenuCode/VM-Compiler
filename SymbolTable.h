@@ -6,17 +6,12 @@
 #include <map>
 
 class SymbolTable {
-private:
-    std::map<std::string, std::pair<int, int>> totalMap;
 public:
-    SymbolTable();
-    SymbolTable(std::string _name, int _idx, int _length);
-    void addMap(std::string);
-
-    std::string name;
-    int location;
-    int length;
+    std::map<std::string, std::pair<int , int>> Symbols;
     int index = 0;
+
+    SymbolTable();
+    void input(SymbolTable *orig, std::string name, int idx, int length);
 };
 
 #endif //SYMBOL_H

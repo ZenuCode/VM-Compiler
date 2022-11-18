@@ -3,16 +3,13 @@
 #include <cstring>
 #include "Statements.h"
 #include "SymbolTable.h"
-#include "InstructionBuffer.h"
+#include "StatementBuffer.h"
 
 Statements::Statements() {}
 
-Statements::Statements(std::string input)  {
-    var_St = input;
-}
-
-void Statements::processStmt(std::string input, std::string arr[]) {
+void Statements::processStmt(std::string input, StatementBuffer *Instructions, SymbolTable *Symbols) {
     //Process input
+
     std::istringstream ss(input);
     std::string word;
     std::string array[3]; //Name, Key, Length
@@ -26,124 +23,236 @@ void Statements::processStmt(std::string input, std::string arr[]) {
     std::string key;
     std::string length;
 
-    if(array[1] == "") {
-        name = array[0];
-    } else if (array[3] != "") {
-        name = array[0];
+    name = array[0];
+    if(array[2] == "") {
+        key = array[1];
+        length = "-1";
+    } else {
         key = array[1];
         length = array[2];
     }
-    else {
-        name = array[0];
-        key = array[1];
-    }
 
+    int position = Instructions->count;
 
     //Make Decision of Input
     if(name == "declscal") {
-        declscal(arr, key, -1, 1);
+        declscal(Symbols, key);
     } else if (name == "declarr") {
-        declarr(arr, key, length);
+        declarr(Symbols, key, length);
     } else if (name == "label") {
-        label(arr, key);
+        label(Symbols, key, position);
     } else if (name == "gosublabel") {
-        gosublabel(arr, key);
+        gosublabel(Instructions, Symbols, key, position);
     } else if (name == "start") {
-        start(arr);
+        start(Instructions);
     } else if (name == "end") {
-        end(arr);
+        end(Instructions);
     } else if (name == "exit") {
-        exit(arr);
+        exit(Instructions);
     } else if (name == "jump") {
-        jump(arr, key);
+        jump(Instructions);
     } else if (name == "jumpzero") {
-        jumpzero(arr, key);
+        jumpzero(Instructions, key);
     } else if (name == "jumpnzero") {
-        jumpnzero(arr, key);
+        jumpnzero(Instructions, key);
     } else if (name == "gosub") {
-        gosub(arr, key);
+        gosub(Instructions, Symbols, key, position);
     } else if (name == "return") {
-        returnF(arr);
+        returnF(Instructions);
     } else if (name == "pushscal") {
-        pushscal(arr, key);
+        pushscal(Instructions, key);
     } else if (name == "pusharr") {
-        pusharr(arr, key);
+        pusharr(Instructions, key);
     } else if (name == "pushi") {
-        pushi(arr, key);
+        pushi(Instructions, key);
     } else if (name == "pop") {
-        pop(arr);
+        pop(Instructions);
     } else if (name == "popscal") {
-        popscal(arr, var);
+        popscal(Instructions, key);
+    } else if (name == "poparr") {
+        poparr(Instructions, key);
     } else if (name == "dup") {
-        dup(arr);
+        dup(Instructions);
     } else if (name == "swap") {
-        swapF(arr);
+        swapF(Instructions);
     } else if (name == "add") {
-        add(arr, key);
+        add(Instructions);
     } else if (name == "negate") {
-        negate(arr, key);
+        negate(Instructions);
     } else if (name == "mul") {
-        mul(arr, key);
+        mul(Instructions);
     } else if (name == "div") {
-        div(arr, key);
+        div(Instructions);
     } else if (name == "printtos") {
-        printos(arr, key);
+        printtos(Instructions);
     } else if (name == "prints") {
-        prints(arr, key);
+        prints(Instructions, Symbols, key);
     }
-
 }
-
 
 //Statements Functions - -1 : later changeable value, -2 : Empty value
-void Statements::declscal(std::string arr[], std::string var, int location, int length) {
-    arr[0] = "-2"; arr[1] = "-2"; arr[2] = var; arr[3] = location; arr[4] = length;
+//SymbolTable Statements::declscal(SymbolTable Symbols, std::string key) {
+//    Symbols = Symbols.input(Symbols, key, 0, 1)
+//}
+
+void Statements::declscal(SymbolTable *Symbols, std::string key) {
+    Symbols->input(Symbols, key, 0, 1);
 }
 
-void Statements::declarr(std::string arr[], std::string var, int location, int length) {
-    arr[0] = "-2"; arr[1] = "-2"; arr[2] = var; arr[3] = location; arr[4] = length;
+void Statements::declarr(SymbolTable *Symbols, std::string key, std::string length) {
+    Symbols->input(Symbols, key, 0, std::stoi(length));
 }
 
-void Statements::start(std::string arr[]) {
-    InstructionBuffer("OP_START_PROGRAM", -1);
-    arr[0] = "OP_START_PROGRAM";
-    arr[1] = "-1"; arr[2] = "-2"; arr[3] = "-2"; arr[4] = "-2";
+void Statements::label(SymbolTable *Symbols, std::string key, int position) {
+    Symbols->input(Symbols, key, position, 0);
 }
 
-void Statements::end(std::string arr[]) {
-    arr[0] = "END";
-    arr[1] = "-2"; arr[2] = "-2"; arr[3] = "-2"; arr[4] = "-2";
+void Statements::gosublabel(StatementBuffer *Instructions, SymbolTable *Symbols, std::string key, int position) {
+    Instructions->threeInput(Instructions, "OP_ENTER_SUBROUTINE", position);
+    Symbols->input(Symbols, key, position, 0);
 }
 
-void Statements::exit(std::string arr[]) {
-    InstructionBuffer("OP_EXIT_PROGRAM", 0);
-    arr[0] = "OP_EXIT_PROGRAM";
-    arr[1] = "-2"; arr[2] = "-2"; arr[3] = "-2"; arr[4] = "-2";
+void Statements::start(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_START_PROGRAM");
 }
 
-/*
-void label(std::string);
-void gosublabel(std::string);
-void start();
-void end();
-void exit();
-void jump(std::string);
-void jumpzero(std::string);
-void jumpnzero(std::string);
-void gosub(std::string);
-void return();
-void pushscal(std::string);
-void pusharr(std::string);
-void pushi(int);
-void pop();
-void popscal(std::string);
-void poparr(std::string);
-void dup();
-void swap();
-void add();
-void negate();
-void mul();
-void div();
-void printtos();
-void prints();
- */
+void Statements::end(StatementBuffer *Instructions) {
+}
+
+void Statements::exit(StatementBuffer *Instructions) {
+    Instructions->threeInput(Instructions, "OP_EXIT_PROGRAM", 0);
+}
+
+void Statements::jump(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_JUMP"); //Need to think of way how to L1, L2
+}
+
+void Statements::jumpzero(StatementBuffer *Instructions, std::string) {
+    Instructions->twoInput(Instructions, "OP_JUMPZERO");
+}
+
+void Statements::jumpnzero(StatementBuffer *Instructions, std::string) {
+    Instructions->twoInput(Instructions, "OP_JUMPNZERO");
+}
+
+void Statements::gosub(StatementBuffer *Instructions, SymbolTable *Symbols, std::string label, int position) {
+    Instructions->twoInput(Instructions, "OP_GOSUB");
+    Symbols->input(Symbols, label, position, 0);
+}
+
+void Statements::returnF(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_RETURN");
+}
+
+void Statements::pushscal(StatementBuffer *Instructions, std::string var) {
+    Instructions->threeInput(Instructions, "OP_PUSHSCALAR", std::stoi(var));
+}
+
+void Statements::pusharr(StatementBuffer *Instructions, std::string var) {
+    Instructions->threeInput(Instructions, "OP_PUSHARR", std::stoi(var));
+}
+
+void Statements::pushi(StatementBuffer *Instructions, std::string var) {
+    Instructions->threeInput(Instructions, "OP_PUSHI", std::stoi(var));
+}
+
+void Statements::pop(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_POP");
+}
+
+void Statements::popscal(StatementBuffer *Instructions, std::string) {
+    Instructions->twoInput(Instructions, "OP_POPSCAL");
+}
+
+void Statements::poparr(StatementBuffer *Instructions, std::string) {
+    Instructions->twoInput(Instructions, "OP_POPARRAY");
+}
+
+void Statements::dup(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_DUP");
+}
+
+void Statements::swapF(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_SWAP");
+}
+
+void Statements::add(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_ADD");
+}
+
+void Statements::negate(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_NEGATE");
+}
+
+void Statements::mul(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_MUL");
+}
+
+void Statements::div(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_DIV");
+}
+
+void Statements::printtos(StatementBuffer *Instructions) {
+    Instructions->twoInput(Instructions, "OP_PRINTTOS");
+}
+
+void Statements::prints(StatementBuffer *Instructions, SymbolTable *Symbols, std::string input) {
+    Instructions->twoInput(Instructions, "OP_PRINT");
+    Symbols->input(Symbols, input, 0, input.length());
+}
+
+void Statements::processPrint(StatementBuffer Instructions, SymbolTable Symbols) {
+
+    int count = 0;
+    for(std::map<int, std::pair<std::string, int> >::const_iterator it = Instructions.Instructions.begin(); it != Instructions.Instructions.end(); ++it) {
+        if(it->second.first == "OP_JUMP") {
+            std::cout << "Jump" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_JUMPZERO") {
+            std::cout << "JumpZero" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_JUMPNZERO") {
+            std::cout << "JumpNZero" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_GOSUB") {
+            std::cout << "GoSub" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_RETURN") {
+            std::cout << "Return" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_ENTER_SUBROUTINE") {
+            std::cout << "GoSubLabel" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_EXIT_SUBROUTINE") {
+            std::cout << "ExitSub" << std::endl;
+        } else if(it->second.first == "OP_START_PROGRAM") {
+            std::cout << "Start 0" << std::endl;
+        } else if(it->second.first == "OP_EXIT_PROGRAM") {
+            std::cout << "Exit" << std::endl;
+        } else if(it->second.first == "OP_PUSHSCALAR") {
+            std::cout << "PushScalar" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_PUSHARRAY") {
+            std::cout << "PushArray" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_PUSHI") {
+            std::cout << "PushI" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_POPSCALAR") {
+            std::cout << "PopScalar" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_POPARRAY") {
+            std::cout << "PopArray" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_POP") {
+            std::cout << "Pop" << std::endl;
+        } else if(it->second.first == "OP_DUP") {
+            std::cout << "Dup" << std::endl;
+        } else if(it->second.first == "OP_SWAP") {
+            std::cout << "Swap" << std::endl;
+        } else if(it->second.first == "OP_ADD") {
+            std::cout << "Add" << std::endl;
+        } else if(it->second.first == "OP_NEGATE") {
+            std::cout << "Negate" << std::endl;
+        } else if(it->second.first == "OP_MUL") {
+            std::cout << "Mul" << std::endl;
+        } else if(it->second.first == "OP_DIV") {
+            std::cout << "Div" << std::endl;
+        } else if(it->second.first == "OP_PRINTS") {
+            std::cout << "Prints 0" << " " << it->second.second << std::endl;
+        } else if(it->second.first == "OP_PRINTTOS") {
+            std::cout << "PrintTOS" << std::endl;
+        }
+    }
+}
+
+
