@@ -3,4 +3,4 @@ project(Step1)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(Step1 main.cpp OutputAndTestCases/Input/0StartExit SymbolTable.cpp SymbolTable.h Statements.cpp Statements.h InstructionBuffer.cpp InstructionBuffer.h)
+add_executable(Step1 main.cpp OutputAndTestCases/Input/0StartExit SymbolTable.cpp SymbolTable.h Statements.cpp Statements.h StatementBuffer.cpp StatementBuffer.h)

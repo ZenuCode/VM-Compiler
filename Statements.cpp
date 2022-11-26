@@ -4,10 +4,11 @@
 #include "Statements.h"
 #include "SymbolTable.h"
 #include "StatementBuffer.h"
+#include "StringBuffer.h"
 
 Statements::Statements() {}
 
-void Statements::processStmt(std::string input, StatementBuffer *Instructions, SymbolTable *Symbols) {
+void Statements::processStmt(std::string input, StatementBuffer *Instructions, SymbolTable *Symbols, StringBuffer *Strings) {
     //Process input
 
     std::istringstream ss(input);
@@ -50,27 +51,27 @@ void Statements::processStmt(std::string input, StatementBuffer *Instructions, S
     } else if (name == "exit") {
         exit(Instructions);
     } else if (name == "jump") {
-        jump(Instructions);
+        jump(Instructions, key);
     } else if (name == "jumpzero") {
         jumpzero(Instructions, key);
     } else if (name == "jumpnzero") {
         jumpnzero(Instructions, key);
     } else if (name == "gosub") {
-        gosub(Instructions, Symbols, key, position);
+        gosub(Instructions, key);
     } else if (name == "return") {
-        returnF(Instructions);
+        returnF(Instructions, Symbols);
     } else if (name == "pushscal") {
-        pushscal(Instructions, key);
+        pushscal(Instructions, Symbols, key);
     } else if (name == "pusharr") {
-        pusharr(Instructions, key);
+        pusharr(Instructions, Symbols, key);
     } else if (name == "pushi") {
         pushi(Instructions, key);
     } else if (name == "pop") {
         pop(Instructions);
     } else if (name == "popscal") {
-        popscal(Instructions, key);
+        popscal(Instructions, Symbols, key);
     } else if (name == "poparr") {
-        poparr(Instructions, key);
+        poparr(Instructions, Symbols, key);
     } else if (name == "dup") {
         dup(Instructions);
     } else if (name == "swap") {
@@ -86,21 +87,19 @@ void Statements::processStmt(std::string input, StatementBuffer *Instructions, S
     } else if (name == "printtos") {
         printtos(Instructions);
     } else if (name == "prints") {
-        prints(Instructions, Symbols, key);
+        prints(Instructions, Strings, key);
     }
 }
 
-//Statements Functions - -1 : later changeable value, -2 : Empty value
-//SymbolTable Statements::declscal(SymbolTable Symbols, std::string key) {
-//    Symbols = Symbols.input(Symbols, key, 0, 1)
-//}
+//////////////
 
 void Statements::declscal(SymbolTable *Symbols, std::string key) {
     Symbols->input(Symbols, key, 0, 1);
 }
 
 void Statements::declarr(SymbolTable *Symbols, std::string key, std::string length) {
-    Symbols->input(Symbols, key, 0, std::stoi(length));
+    int num = std::stoi(length);
+    Symbols->input(Symbols, key, num, 0);
 }
 
 void Statements::label(SymbolTable *Symbols, std::string key, int position) {
@@ -108,12 +107,15 @@ void Statements::label(SymbolTable *Symbols, std::string key, int position) {
 }
 
 void Statements::gosublabel(StatementBuffer *Instructions, SymbolTable *Symbols, std::string key, int position) {
-    Instructions->threeInput(Instructions, "OP_ENTER_SUBROUTINE", position);
+    Instructions->fourInput(Instructions, "OP_ENTER_SUBROUTINE", -1, key);
     Symbols->input(Symbols, key, position, 0);
+    Symbols->subroutine[Symbols->subRouON] = Symbols->Symbols;
+    Symbols->subRouON++;
+    Symbols->Symbols = Symbols->subroutine[Symbols->subRouON];
 }
 
 void Statements::start(StatementBuffer *Instructions) {
-    Instructions->twoInput(Instructions, "OP_START_PROGRAM");
+    Instructions->threeInput(Instructions, "OP_START_PROGRAM", 0);
 }
 
 void Statements::end(StatementBuffer *Instructions) {
@@ -123,33 +125,45 @@ void Statements::exit(StatementBuffer *Instructions) {
     Instructions->threeInput(Instructions, "OP_EXIT_PROGRAM", 0);
 }
 
-void Statements::jump(StatementBuffer *Instructions) {
-    Instructions->twoInput(Instructions, "OP_JUMP"); //Need to think of way how to L1, L2
+void Statements::jump(StatementBuffer *Instructions, std::string val) {
+    Instructions->fourInput(Instructions, "OP_JUMP", -1, val);
 }
 
 void Statements::jumpzero(StatementBuffer *Instructions, std::string) {
     Instructions->twoInput(Instructions, "OP_JUMPZERO");
 }
 
-void Statements::jumpnzero(StatementBuffer *Instructions, std::string) {
+void Statements::jumpnzero(StatementBuffer *Instructions, std::string val) {
     Instructions->twoInput(Instructions, "OP_JUMPNZERO");
 }
 
-void Statements::gosub(StatementBuffer *Instructions, SymbolTable *Symbols, std::string label, int position) {
-    Instructions->twoInput(Instructions, "OP_GOSUB");
-    Symbols->input(Symbols, label, position, 0);
+void Statements::gosub(StatementBuffer *Instructions, std::string label) {
+    Instructions->fourInput(Instructions, "OP_GOSUB", -1, label);
 }
 
-void Statements::returnF(StatementBuffer *Instructions) {
-    Instructions->twoInput(Instructions, "OP_RETURN");
+void Statements::returnF(StatementBuffer *Instructions, SymbolTable *Symbols) {
+    Instructions->threeInput(Instructions, "OP_RETURN", 0);
+
+    int index = 0;
+    for(std::map<int, std::pair<std::pair<std::string, int>, std::string>>::const_iterator it = Instructions->Instructions.begin(); it != Instructions->Instructions.end(); ++it) {
+        if(it->second.first.first == "OP_ENTER_SUBROUTINE") {
+            index = it->first;
+            break;
+        }
+    }
+    Instructions->Instructions[index].first.second = Symbols->subMem[Symbols->subRouON];
+    Symbols->subRouON--;
+    Symbols->Symbols = Symbols->subroutine[Symbols->subRouON];
 }
 
-void Statements::pushscal(StatementBuffer *Instructions, std::string var) {
-    Instructions->threeInput(Instructions, "OP_PUSHSCALAR", std::stoi(var));
+void Statements::pushscal(StatementBuffer *Instructions, SymbolTable *Symbols, std::string var) {
+    int num = Symbols->Symbols[var].first;
+    Instructions->fourInput(Instructions, "OP_PUSHSCALAR", num, var);
 }
 
-void Statements::pusharr(StatementBuffer *Instructions, std::string var) {
-    Instructions->threeInput(Instructions, "OP_PUSHARR", std::stoi(var));
+void Statements::pusharr(StatementBuffer *Instructions, SymbolTable *Symbols, std::string var) {
+    int num = Symbols->Symbols[var].first;
+    Instructions->fourInput(Instructions, "OP_PUSHARRAY", num, var);
 }
 
 void Statements::pushi(StatementBuffer *Instructions, std::string var) {
@@ -160,12 +174,14 @@ void Statements::pop(StatementBuffer *Instructions) {
     Instructions->twoInput(Instructions, "OP_POP");
 }
 
-void Statements::popscal(StatementBuffer *Instructions, std::string) {
-    Instructions->twoInput(Instructions, "OP_POPSCAL");
+void Statements::popscal(StatementBuffer *Instructions, SymbolTable *Symbols, std::string var) {
+    int num = Symbols->Symbols[var].first;
+    Instructions->fourInput(Instructions, "OP_POPSCALAR", num, var);
 }
 
-void Statements::poparr(StatementBuffer *Instructions, std::string) {
-    Instructions->twoInput(Instructions, "OP_POPARRAY");
+void Statements::poparr(StatementBuffer *Instructions, SymbolTable *Symbols, std::string var) {
+    int num = Symbols->Symbols[var].first;
+    Instructions->fourInput(Instructions, "OP_POPARRAY", num, var);
 }
 
 void Statements::dup(StatementBuffer *Instructions) {
@@ -196,60 +212,83 @@ void Statements::printtos(StatementBuffer *Instructions) {
     Instructions->twoInput(Instructions, "OP_PRINTTOS");
 }
 
-void Statements::prints(StatementBuffer *Instructions, SymbolTable *Symbols, std::string input) {
-    Instructions->twoInput(Instructions, "OP_PRINT");
-    Symbols->input(Symbols, input, 0, input.length());
+void Statements::prints(StatementBuffer *Instructions, StringBuffer *Strings, std::string input) {
+    Instructions->threeInput(Instructions, "OP_PRINTS", Strings->count);
+    Strings->insertStr(Strings, input, Strings->count);
 }
 
-void Statements::processPrint(StatementBuffer Instructions, SymbolTable Symbols) {
+void Statements::processPrint(StatementBuffer Instructions, SymbolTable Symbols, StringBuffer Strings) {
+    for(int i = 0; i < Strings.count; i++) {
+        std::cout << Strings.stringBuff[i] << std::endl;
+    }
+    Strings.count = 0;
 
-    int count = 0;
-    for(std::map<int, std::pair<std::string, int> >::const_iterator it = Instructions.Instructions.begin(); it != Instructions.Instructions.end(); ++it) {
-        if(it->second.first == "OP_JUMP") {
-            std::cout << "Jump" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_JUMPZERO") {
-            std::cout << "JumpZero" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_JUMPNZERO") {
-            std::cout << "JumpNZero" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_GOSUB") {
-            std::cout << "GoSub" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_RETURN") {
-            std::cout << "Return" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_ENTER_SUBROUTINE") {
-            std::cout << "GoSubLabel" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_EXIT_SUBROUTINE") {
+    Instructions.labelCount = 0;
+    std::string temp;
+
+    for(std::map<int, std::pair<std::pair<std::string, int>, std::string>>::const_iterator it = Instructions.Instructions.begin(); it != Instructions.Instructions.end(); ++it) {
+        if(it->second.first.second == -1) {
+            temp = Instructions.Instructions[it->first].second;
+            Instructions.Instructions[it->first].first.second = Symbols.Symbols[temp].first;
+        }
+    }
+
+    for(std::map<int, std::pair<std::pair<std::string, int>, std::string>>::iterator it = Instructions.Instructions.begin(); it != Instructions.Instructions.end(); ++it) {
+        if(it->second.first.first == "OP_JUMP") {
+            std::cout << "Jump" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_JUMPZERO") {
+            std::cout << "JumpZero" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_JUMPNZERO") {
+            std::cout << "JumpNZero" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_GOSUB") {
+            for(std::map<int, std::pair<std::pair<std::string, int>, std::string>>::const_iterator in = Instructions.Instructions.begin(); in != Instructions.Instructions.end(); ++in) {
+                if(in->second.second == it->second.second && in->first != it->first) {
+                    it->second.first.second = in->first;;
+                }
+            }
+            std::cout << "GoSub" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_RETURN") {
+            std::cout << "Return" << " " << std::endl;
+        } else if(it->second.first.first == "OP_ENTER_SUBROUTINE") {
+            std::cout << "GoSubLabel" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_EXIT_SUBROUTINE") {
             std::cout << "ExitSub" << std::endl;
-        } else if(it->second.first == "OP_START_PROGRAM") {
-            std::cout << "Start 0" << std::endl;
-        } else if(it->second.first == "OP_EXIT_PROGRAM") {
+        } else if(it->second.first.first == "OP_START_PROGRAM") {
+            int count = 0;
+            for(std::map<std::string, std::pair<int, int>>::const_iterator in = Symbols.Symbols.begin(); in != Symbols.Symbols.end(); in++) {
+                count += in->second.second;
+            }
+            std::cout << "Start " << count << std::endl;
+        } else if(it->second.first.first == "OP_EXIT_PROGRAM") {
             std::cout << "Exit" << std::endl;
-        } else if(it->second.first == "OP_PUSHSCALAR") {
-            std::cout << "PushScalar" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_PUSHARRAY") {
-            std::cout << "PushArray" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_PUSHI") {
-            std::cout << "PushI" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_POPSCALAR") {
-            std::cout << "PopScalar" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_POPARRAY") {
-            std::cout << "PopArray" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_POP") {
+        } else if(it->second.first.first == "OP_PUSHSCALAR") {
+            std::cout << "PushScalar" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_PUSHARRAY") {
+            std::cout << "PushArray" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_PUSHI") {
+            std::cout << "PushI" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_POPSCALAR") {
+            std::cout << "PopScalar" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_POPARRAY") {
+            std::cout << "PopArray" << " " << it->second.first.second << std::endl;
+        } else if(it->second.first.first == "OP_POP") {
             std::cout << "Pop" << std::endl;
-        } else if(it->second.first == "OP_DUP") {
+        } else if(it->second.first.first == "OP_DUP") {
             std::cout << "Dup" << std::endl;
-        } else if(it->second.first == "OP_SWAP") {
+        } else if(it->second.first.first == "OP_SWAP") {
             std::cout << "Swap" << std::endl;
-        } else if(it->second.first == "OP_ADD") {
+        } else if(it->second.first.first == "OP_ADD") {
             std::cout << "Add" << std::endl;
-        } else if(it->second.first == "OP_NEGATE") {
+        } else if(it->second.first.first == "OP_NEGATE") {
             std::cout << "Negate" << std::endl;
-        } else if(it->second.first == "OP_MUL") {
+        } else if(it->second.first.first == "OP_MUL") {
             std::cout << "Mul" << std::endl;
-        } else if(it->second.first == "OP_DIV") {
+        } else if(it->second.first.first == "OP_DIV") {
             std::cout << "Div" << std::endl;
-        } else if(it->second.first == "OP_PRINTS") {
-            std::cout << "Prints 0" << " " << it->second.second << std::endl;
-        } else if(it->second.first == "OP_PRINTTOS") {
+        } else if(it->second.first.first == "OP_PRINTS") {
+            std::cout << "Prints" << " " << Strings.count << std::endl;
+            Strings.count++;
+        } else if(it->second.first.first == "OP_PRINTTOS") {
             std::cout << "PrintTOS" << std::endl;
         }
     }

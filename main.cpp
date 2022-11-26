@@ -4,6 +4,7 @@
 #include "Statements.h"
 #include "SymbolTable.h"
 #include "StatementBuffer.h"
+#include "StringBuffer.h"
 
 int main(int argc, char *argv[]) {
     std::ifstream binaryFile(argv[1]);
@@ -16,15 +17,16 @@ int main(int argc, char *argv[]) {
     std::map<StatementBuffer, SymbolTable> total;
     StatementBuffer Instructions;
     SymbolTable Symbols;
+    StringBuffer Strings;
 
     int count = 0;
     std::string line;
     while(binaryFile.peek() != EOF) {
         std::getline(binaryFile, line);
         count++;
-        Statements().processStmt(line, &Instructions, &Symbols);
+        Statements().processStmt(line, &Instructions, &Symbols, &Strings);
     }
 
-    Statements().processPrint(Instructions, Symbols);
+    Statements().processPrint(Instructions, Symbols, Strings);
     return 0;
 }

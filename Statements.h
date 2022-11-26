@@ -5,6 +5,7 @@
 #include <string>
 #include "SymbolTable.h"
 #include "StatementBuffer.h"
+#include "StringBuffer.h"
 
 class Statements {
 private:
@@ -12,8 +13,8 @@ private:
     std::string length;
 public:
     Statements();
-    void processStmt(std::string, StatementBuffer *Instructions, SymbolTable *Symbols);
-    void processPrint(StatementBuffer Instructions,  SymbolTable Symbols);
+    void processStmt(std::string, StatementBuffer *Instructions, SymbolTable *Symbols, StringBuffer *Strings);
+    void processPrint(StatementBuffer Instructions,  SymbolTable Symbols, StringBuffer Strings);
 
     void declscal(SymbolTable *, std::string);
     void declarr(SymbolTable *, std::string, std::string);
@@ -22,17 +23,17 @@ public:
     void start(StatementBuffer *);
     void end(StatementBuffer *);
     void exit(StatementBuffer *);
-    void jump(StatementBuffer *);
+    void jump(StatementBuffer *, std::string);
     void jumpzero(StatementBuffer *, std::string);
     void jumpnzero(StatementBuffer *, std::string);
-    void gosub(StatementBuffer *, SymbolTable*, std::string, int);
-    void returnF(StatementBuffer *);
-    void pushscal(StatementBuffer *, std::string);
-    void pusharr(StatementBuffer *, std::string);
+    void gosub(StatementBuffer *, std::string);
+    void returnF(StatementBuffer *, SymbolTable *);
+    void pushscal(StatementBuffer *, SymbolTable *, std::string);
+    void pusharr(StatementBuffer *, SymbolTable *, std::string);
     void pushi(StatementBuffer *, std::string);
     void pop(StatementBuffer *);
-    void popscal(StatementBuffer *, std::string);
-    void poparr(StatementBuffer *, std::string);
+    void popscal(StatementBuffer *, SymbolTable *, std::string);
+    void poparr(StatementBuffer *, SymbolTable *, std::string);
     void dup(StatementBuffer *);
     void swapF(StatementBuffer *);
     void add(StatementBuffer *);
@@ -40,6 +41,6 @@ public:
     void mul(StatementBuffer *);
     void div(StatementBuffer *);
     void printtos(StatementBuffer *);
-    void prints(StatementBuffer *, SymbolTable *, std::string);
+    void prints(StatementBuffer *, StringBuffer *, std::string);
 };
 #endif //STEP1_STATEMENTS_H
