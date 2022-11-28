@@ -1,0 +1,10 @@
+this_should_print
+print_in_subroutine_should_print
+OP_START_PROGRAM 0
+OP_GOSUB 4
+OP_PRINTS 0
+OP_JUMP 7
+OP_ENTER_SUBROUTINE 4
+OP_PRINTS 1
+OP_RETURN 0
+OP_EXIT_PROGRAM 0

@@ -1,8 +1,0 @@
-start
-pushi 6
-pushi 2
-div
-prints 6/2=
-printtos
-exit
-end
